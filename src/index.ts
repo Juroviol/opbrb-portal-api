@@ -1,16 +1,13 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { createHandler } from 'graphql-http/lib/use/express';
-import { mergeSchemas } from '@graphql-tools/schema';
-import userSchema from '@schemas/user.schema';
-import expressPlayground from 'graphql-playground-middleware-express';
+import schema from '@schemas';
 import * as process from 'node:process';
+import AuthenticationRoute from '@routes/authentication.route';
 
 const app = express();
 
-const schema = mergeSchemas({
-  schemas: [userSchema],
-});
+app.use('/auth', AuthenticationRoute);
 
 app.all(
   '/graphql',
@@ -18,8 +15,6 @@ app.all(
     schema,
   })
 );
-
-app.get('/playground', expressPlayground({ endpoint: '/graphql' }));
 
 (async () => {
   await mongoose.connect(process.env.DATABASE_URL as string);

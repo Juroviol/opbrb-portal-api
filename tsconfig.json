@@ -12,8 +12,10 @@
       "@models/*": ["models/*"],
       "@resolvers/*": ["resolvers/*"],
       "@schemas/*": ["schemas/*"],
+      "@schemas": ["schemas/index.ts"],
       "@services/*": ["services/*"],
-      "@repositories/*": ["repositories/*"]
+      "@repositories/*": ["repositories/*"],
+      "@routes/*": ["routes/*"]
     }
   },
   "include": ["src/**/*"]

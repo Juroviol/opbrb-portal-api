@@ -1,13 +1,12 @@
 import {
+  GraphQLID,
+  GraphQLList,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
-  GraphQLID,
-  GraphQLList,
+  GraphQLNonNull,
 } from 'graphql';
-import UserService from '@services/user.service';
-import { IUser } from '@models/user.model';
-import { FieldNode } from 'graphql/language/ast';
+import { createUser, getUserById, getUsers } from '@resolvers/user.resolver';
 
 const UserType = new GraphQLObjectType({
   name: 'User',
@@ -15,21 +14,23 @@ const UserType = new GraphQLObjectType({
     _id: { type: GraphQLID },
     name: { type: GraphQLString },
     email: { type: GraphQLString },
+    password: { type: GraphQLString },
   }),
 });
 
 const RootQuery = new GraphQLObjectType({
   name: 'Query',
   fields: {
+    getUserById: {
+      type: UserType,
+      args: {
+        _id: { type: GraphQLID },
+      },
+      resolve: getUserById,
+    },
     getUsers: {
       type: new GraphQLList(UserType),
-      resolve: async (_parent, _args, _context, info) => {
-        const [fieldNode] = info.fieldNodes;
-        const selections = fieldNode.selectionSet?.selections as FieldNode[];
-        return UserService.list({
-          select: selections?.map((s) => s.name.value as keyof IUser),
-        });
-      },
+      resolve: getUsers,
     },
   },
 });
@@ -40,12 +41,11 @@ const RootMutation = new GraphQLObjectType({
     createUser: {
       type: UserType,
       args: {
-        name: { type: GraphQLString },
-        email: { type: GraphQLString },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        email: { type: new GraphQLNonNull(GraphQLString) },
+        password: { type: new GraphQLNonNull(GraphQLString) },
       },
-      resolve: (_parent, args: IUser) => {
-        return UserService.insert(args);
-      },
+      resolve: createUser,
     },
   },
 });
