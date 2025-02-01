@@ -3,6 +3,7 @@ import { createHandler } from 'graphql-http/lib/use/express';
 import schema from './schemas';
 import * as process from 'node:process';
 import AuthenticationRoute from './routes/authentication.route';
+import mongoose from 'mongoose';
 
 const app = express();
 
@@ -20,8 +21,8 @@ app.all(
 );
 
 (async () => {
-  // await mongoose.connect(process.env.DATABASE_URL as string);
-  // console.log('Conectado ao MongoDB');
+  await mongoose.connect(process.env.DATABASE_URL as string);
+  console.log('Connected to MongoDB');
   app.listen(
     {
       port: process.env.PORT || 8080,
