@@ -1,4 +1,4 @@
-import { IUser, UserModel } from '../models/user.model';
+import { IUser, UserModel } from './user.model';
 import { Schema } from 'mongoose';
 
 export interface IPastor extends IUser {
