@@ -6,7 +6,7 @@ import {
   GraphQLString,
   GraphQLNonNull,
 } from 'graphql';
-import { createUser, getUserById, getUsers } from '@resolvers/user.resolver';
+import { createUser, getUserById, getUsers } from '../resolvers/user.resolver';
 
 const UserType = new GraphQLObjectType({
   name: 'User',

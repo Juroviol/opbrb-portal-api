@@ -6,17 +6,6 @@
     "strict": true,                                      /* Enable all strict type-checking options. */
     "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
     "outDir": "./dist",
-    "rootDir": "./src",
-    "baseUrl": "./src",
-    "paths": {
-      "@models/*": ["models/*"],
-      "@resolvers/*": ["resolvers/*"],
-      "@schemas/*": ["schemas/*"],
-      "@schemas": ["schemas/index.ts"],
-      "@services/*": ["services/*"],
-      "@repositories/*": ["repositories/*"],
-      "@routes/*": ["routes/*"]
-    }
   },
   "include": ["src/**/*"]
 }

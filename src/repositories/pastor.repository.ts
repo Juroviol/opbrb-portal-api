@@ -1,5 +1,5 @@
-import BaseRepository from '@repositories/base.repository';
-import { PastorModel, IPastor } from '@models/pastor.model';
+import BaseRepository from '../repositories/base.repository';
+import { PastorModel, IPastor } from '../models/pastor.model';
 
 class PastorRepository extends BaseRepository<IPastor> {
   constructor() {

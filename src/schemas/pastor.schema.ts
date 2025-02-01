@@ -6,8 +6,8 @@ import {
   GraphQLString,
 } from 'graphql';
 import { FieldNode } from 'graphql/language/ast';
-import PastorService from '@services/pastor.service';
-import { IPastor } from '@models/pastor.model';
+import PastorService from '../services/pastor.service';
+import { IPastor } from '../models/pastor.model';
 
 const PastorType = new GraphQLObjectType({
   name: 'Pastor',

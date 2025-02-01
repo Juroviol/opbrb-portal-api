@@ -6,7 +6,7 @@ import Repository, {
   Page,
   PropValue,
   Result,
-} from '@repositories/repository';
+} from '../repositories/repository';
 import Service from './service';
 import { Types } from 'mongoose';
 

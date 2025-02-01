@@ -1,5 +1,5 @@
-import userSchema from '@schemas/user.schema';
-import pastorSchema from '@schemas/pastor.schema';
+import userSchema from './user.schema';
+import pastorSchema from './pastor.schema';
 import { mergeSchemas } from '@graphql-tools/schema';
 
 export default mergeSchemas({

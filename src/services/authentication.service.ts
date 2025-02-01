@@ -1,5 +1,5 @@
-import { IUser } from '@models/user.model';
-import UserService from '@services/user.service';
+import { IUser } from '../models/user.model';
+import UserService from './user.service';
 import bcrypt from 'bcrypt';
 import Jwt from 'jsonwebtoken';
 

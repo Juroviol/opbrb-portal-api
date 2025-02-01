@@ -1,9 +1,8 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import { createHandler } from 'graphql-http/lib/use/express';
-import schema from '@schemas';
+import schema from './schemas';
 import * as process from 'node:process';
-import AuthenticationRoute from '@routes/authentication.route';
+import AuthenticationRoute from './routes/authentication.route';
 
 const app = express();
 
@@ -21,9 +20,14 @@ app.all(
 );
 
 (async () => {
-  await mongoose.connect(process.env.DATABASE_URL as string);
-  console.log('Conectado ao MongoDB');
-  app.listen({
-    port: process.env.PORT || 8080,
-  });
+  // await mongoose.connect(process.env.DATABASE_URL as string);
+  // console.log('Conectado ao MongoDB');
+  app.listen(
+    {
+      port: process.env.PORT || 8080,
+    },
+    () => {
+      console.log('Server running');
+    }
+  );
 })();

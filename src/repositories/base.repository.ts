@@ -15,7 +15,7 @@ import Repository, {
   PropValue,
   Result,
 } from './repository';
-import Base from '@models/base.model';
+import Base from '../models/base.model';
 
 abstract class BaseRepository<P extends Base> implements Repository<P> {
   protected constructor(protected model: Model<P>) {}

@@ -1,7 +1,7 @@
 import BaseService from './base.service';
-import { IUser } from '@models/user.model';
-import UserRepository from '@repositories/user.repository';
-import { Result } from '@repositories/repository';
+import { IUser } from '../models/user.model';
+import UserRepository from '../repositories/user.repository';
+import { Result } from '../repositories/repository';
 import bcrypt from 'bcrypt';
 
 class UserService extends BaseService<IUser> {

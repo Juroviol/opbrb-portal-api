@@ -8,7 +8,7 @@ import {
   Options,
   PropValue,
   ViewFind,
-} from '@repositories/repository';
+} from '../repositories/repository';
 
 export interface ViewService<P> {
   findById(

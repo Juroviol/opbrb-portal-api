@@ -1,6 +1,6 @@
 import { GraphQLFieldResolver } from 'graphql/type/definition';
-import { IUser } from '@models/user.model';
-import UserService from '@services/user.service';
+import { IUser } from '../models/user.model';
+import UserService from '../services/user.service';
 import { FieldNode } from 'graphql/language/ast';
 
 export const getUserById: GraphQLFieldResolver<

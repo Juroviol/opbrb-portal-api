@@ -2,8 +2,8 @@ import express from 'express';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import bodyParser from 'body-parser';
-import AuthenticationService from '@services/authentication.service';
-import { IUser } from '@models/user.model';
+import AuthenticationService from '../services/authentication.service';
+import { IUser } from '../models/user.model';
 
 const router = express.Router();
 
