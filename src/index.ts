@@ -8,7 +8,7 @@ import AuthenticationRoute from '@routes/authentication.route';
 const app = express();
 
 app.get('/health-check', (_request, response) => {
-  response.status(200).send('I am health');
+  response.status(200).send('I am health!');
 });
 
 app.use('/auth', AuthenticationRoute);
