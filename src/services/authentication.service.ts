@@ -23,11 +23,19 @@ class AuthenticationService {
   }
 
   async generateToken(user: IUser): Promise<string> {
-    return Jwt.sign(user, process.env.JWT_SECRET as string, {
-      expiresIn: '1d',
-      issuer: 'opbrb',
-      subject: user._id.toString(),
-    });
+    return Jwt.sign(
+      {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: '1d',
+        issuer: 'opbrb',
+        subject: user._id.toString(),
+      }
+    );
   }
 }
 
