@@ -4,26 +4,44 @@ import {
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
+  GraphQLEnumType,
 } from 'graphql';
+import { GraphQLDate } from 'graphql-scalars';
 import { FieldNode } from 'graphql/language/ast';
 import PastorService from '../services/pastor.service';
-import { IPastor } from '../models/pastor.model';
+import { IPastor, MaritalStatus } from '../models/pastor.model';
+import { mapValues } from 'lodash';
+import { GraphQLUpload } from 'graphql-upload-ts';
+
+const PastorFields = {
+  _id: { type: GraphQLID },
+  name: { type: GraphQLString },
+  cpf: { type: GraphQLString },
+  email: { type: GraphQLString },
+  password: { type: GraphQLString },
+  maritalStatus: {
+    type: new GraphQLEnumType({
+      name: 'MaritalStatus',
+      values: mapValues(MaritalStatus, (value) => {
+        return {
+          value,
+        };
+      }),
+    }),
+  },
+  birthday: { type: GraphQLDate },
+  street: { type: GraphQLString },
+  number: { type: GraphQLString },
+  city: { type: GraphQLString },
+  state: { type: GraphQLString },
+  district: { type: GraphQLString },
+  zipCode: { type: GraphQLString },
+  cellPhone: { type: GraphQLString },
+};
 
 const PastorType = new GraphQLObjectType({
   name: 'Pastor',
-  fields: () => ({
-    _id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    email: { type: GraphQLString },
-    password: { type: GraphQLString },
-    address: { type: GraphQLString },
-    number: { type: GraphQLString },
-    city: { type: GraphQLString },
-    state: { type: GraphQLString },
-    country: { type: GraphQLString },
-    zipCode: { type: GraphQLString },
-    cellPhone: { type: GraphQLString },
-  }),
+  fields: () => PastorFields,
 });
 
 const RootQuery = new GraphQLObjectType({
@@ -48,19 +66,34 @@ const RootMutation = new GraphQLObjectType({
     createPastor: {
       type: PastorType,
       args: {
-        name: { type: GraphQLString },
-        email: { type: GraphQLString },
-        password: { type: GraphQLString },
-        address: { type: GraphQLString },
-        number: { type: GraphQLString },
-        city: { type: GraphQLString },
-        state: { type: GraphQLString },
-        country: { type: GraphQLString },
-        zipCode: { type: GraphQLString },
-        cellPhone: { type: GraphQLString },
+        ...PastorFields,
+        file: { type: GraphQLUpload },
       },
-      resolve: (_parent, args: IPastor) => {
-        return PastorService.insert(args);
+      resolve: async (
+        _parent,
+        args: Omit<IPastor, '_id' | 'recommendationLetterUrl'> & {
+          file: Promise<{
+            filename: string;
+            mimetype: string;
+            createReadStream: () => NodeJS.ReadableStream;
+          }>;
+        }
+      ) => {
+        const { filename, mimetype, createReadStream } = await args.file;
+        const stream = createReadStream();
+        const chunks: Buffer[] = [];
+        const buffer = await new Promise<Buffer<ArrayBuffer>>((resolve) => {
+          stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+        return PastorService.insert({
+          ...args,
+          file: {
+            filename,
+            mimetype,
+            buffer,
+          },
+        });
       },
     },
   },

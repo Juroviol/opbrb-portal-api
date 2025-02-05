@@ -1,5 +1,6 @@
 import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/express';
+import { graphqlUploadExpress } from 'graphql-upload-ts';
 import schema from './schemas';
 import * as process from 'node:process';
 import AuthenticationRoute from './routes/authentication.route';
@@ -8,6 +9,7 @@ import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import AuthenticationService from './services/authentication.service';
+import cors from 'cors';
 
 const app = express();
 
@@ -48,9 +50,31 @@ app.use('/auth', AuthenticationRoute);
 
 app.all(
   '/graphql',
-  passport.authenticate('jwt', { session: false }),
+  cors(),
+  graphqlUploadExpress({
+    maxFileSize: 1024 * 1024 * 1024,
+    maxFiles: 10,
+  }),
+  (req, res, next) => {
+    if (req.headers['content-type']?.startsWith('multipart/form-data;')) {
+      req.headers['content-type'] = 'application/json';
+    }
+    next();
+  },
   createHandler({
     schema,
+    context: async (req) => {
+      const user = await new Promise((resolve) => {
+        passport.authenticate(
+          'jwt',
+          { session: false },
+          (err: unknown, user: unknown) => {
+            resolve(user);
+          }
+        )(req);
+      });
+      return { ...(!!user && { user }) };
+    },
   })
 );
 

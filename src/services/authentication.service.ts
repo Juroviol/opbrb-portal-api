@@ -33,7 +33,7 @@ class AuthenticationService {
       {
         expiresIn: '1d',
         issuer: 'opbrb',
-        subject: user._id.toString(),
+        subject: user._id?.toString(),
       }
     );
   }
