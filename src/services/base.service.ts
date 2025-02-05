@@ -90,7 +90,7 @@ abstract class BaseService<P> implements Service<P> {
    */
   findById(
     id: string | Types.ObjectId,
-    options?: Pick<Options<P>, 'withDeleted' | 'populate'>
+    options?: Pick<Options<P>, 'withDeleted' | 'populate' | 'select'>
   ): Promise<Result<P> | null> {
     return this.repository.findById(id, options);
   }

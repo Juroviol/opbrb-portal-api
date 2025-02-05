@@ -47,12 +47,15 @@ const PastorType = new GraphQLObjectType({
 const RootQuery = new GraphQLObjectType({
   name: 'Query',
   fields: {
-    getPastors: {
-      type: new GraphQLList(PastorType),
-      resolve: async (_parent, _args, _context, info) => {
+    getPastor: {
+      type: PastorType,
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve: async (_parent, args, _context, info) => {
         const [fieldNode] = info.fieldNodes;
         const selections = fieldNode.selectionSet?.selections as FieldNode[];
-        return PastorService.list({
+        return PastorService.findById(args.id, {
           select: selections?.map((s) => s.name.value as keyof IPastor),
         });
       },

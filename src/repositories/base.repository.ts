@@ -313,7 +313,7 @@ abstract class BaseRepository<P extends Base> implements Repository<P> {
    */
   findById(
     id: string | Types.ObjectId,
-    options?: Pick<Options<P>, 'withDeleted' | 'populate'>
+    options?: Pick<Options<P>, 'withDeleted' | 'populate' | 'select'>
   ): Promise<Result<P> | null> {
     return <Promise<Result<P> | null>>this.model
       .findOne(
@@ -323,7 +323,7 @@ abstract class BaseRepository<P extends Base> implements Repository<P> {
             $in: uniq([null, false, options?.withDeleted]),
           },
         },
-        null,
+        options?.select,
         {
           populate: options?.populate,
         }
