@@ -1,10 +1,9 @@
 import {
+  GraphQLEnumType,
   GraphQLID,
-  GraphQLList,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
-  GraphQLEnumType,
 } from 'graphql';
 import { GraphQLDate } from 'graphql-scalars';
 import { FieldNode } from 'graphql/language/ast';
