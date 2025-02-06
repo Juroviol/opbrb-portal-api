@@ -28,7 +28,7 @@ export const createPastor: GraphQLFieldResolver<
     }>;
   },
   Promise<IPastor>
-> = async (_parent, args, ctx, info) => {
+> = async (_parent, args) => {
   const { filename, mimetype, createReadStream } = await args.file;
   const stream = createReadStream();
   const chunks: Buffer[] = [];

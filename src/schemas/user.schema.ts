@@ -10,7 +10,7 @@ import {
   createUser,
   getLoggedUser,
 } from '../resolvers/user.resolver';
-import { GraphQLEnumType } from 'graphql/index';
+import { GraphQLEnumType } from 'graphql/type';
 import { mapValues } from 'lodash';
 import { Role } from '../models/user.model';
 
