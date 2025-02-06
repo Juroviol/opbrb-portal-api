@@ -1,10 +1,17 @@
 import { IUser, UserModel } from './user.model';
 import { Schema } from 'mongoose';
+
 export enum MaritalStatus {
   Married = 'Casado',
   Single = 'Solteiro',
   Widower = 'Viúvo',
 }
+
+export enum Status {
+  APPROVED = 'Aprovado',
+  ANALYSING = 'Em análise',
+}
+
 export interface IPastor extends IUser {
   cpf: string;
   maritalStatus: MaritalStatus;
@@ -17,6 +24,9 @@ export interface IPastor extends IUser {
   zipCode: string;
   cellPhone: string;
   recommendationLetterUrl?: string;
+  status: Status;
+  church: string;
+  ordinanceTime: number;
 }
 
 export const PastorModel = UserModel.discriminator<IPastor>(
@@ -37,5 +47,13 @@ export const PastorModel = UserModel.discriminator<IPastor>(
     zipCode: { type: String, required: true },
     cellPhone: { type: String, required: true },
     recommendationLetterUrl: { type: String },
+    church: { type: String, required: true },
+    ordinanceTime: { type: Number, required: true },
+    status: {
+      type: String,
+      enum: Status,
+      required: true,
+      default: Status.ANALYSING,
+    },
   })
 );

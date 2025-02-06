@@ -3,24 +3,18 @@ import { IUser } from '../models/user.model';
 import UserService from '../services/user.service';
 import { FieldNode } from 'graphql/language/ast';
 
-export const getUserById: GraphQLFieldResolver<
+export const getLoggedUser: GraphQLFieldResolver<
   IUser,
-  unknown,
-  { _id: string },
+  { user: { id: string } },
+  { id: string },
   Promise<IUser | null>
-> = (_parent, { _id }) => {
-  return UserService.findById(_id);
-};
-
-export const getUsers: GraphQLFieldResolver<
-  IUser,
-  unknown,
-  unknown,
-  Promise<IUser[]>
-> = (_parent, _args, _context, info) => {
+> = (_parent, _args, ctx, info) => {
+  if (!ctx.user) {
+    throw new Error('No user logged in.');
+  }
   const [fieldNode] = info.fieldNodes;
   const selections = fieldNode.selectionSet?.selections as FieldNode[];
-  return UserService.list({
+  return UserService.findById(ctx.user.id, {
     select: selections?.map((s) => s.name.value as keyof IUser),
   });
 };
@@ -32,4 +26,19 @@ export const createUser: GraphQLFieldResolver<
   Promise<IUser>
 > = (_parent, args: IUser) => {
   return UserService.insert(args);
+};
+
+export const authenticate: GraphQLFieldResolver<
+  unknown,
+  { user: IUser | null },
+  { username: string; password: string },
+  Promise<{ token: string }>
+> = async (_parent, { username, password }, ctx) => {
+  const user = await UserService.validateUsernameAndPassword(
+    username,
+    password
+  );
+  ctx.user = user;
+  const token = await UserService.generateToken(user);
+  return { token };
 };

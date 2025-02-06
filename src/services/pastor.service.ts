@@ -5,6 +5,8 @@ import { Result } from '../repositories/repository';
 import FileApi from '../apis/file.api';
 import { Types } from 'mongoose';
 import { v4 as uuid } from 'uuid';
+import { Role } from '../models/user.model';
+import bcrypt from 'bcrypt';
 
 class PastorService extends BaseService<IPastor> {
   constructor() {
@@ -26,9 +28,12 @@ class PastorService extends BaseService<IPastor> {
       .split('.')
       .pop()}`;
     await FileApi.create(filePath, file.buffer, 'public-read', file.mimetype);
+    const hashedPassword = await bcrypt.hash(props.password, 10);
     return super.insert({
       _id,
       ...props,
+      password: hashedPassword,
+      role: Role.PASTOR,
       recommendationLetterUrl: filePath,
     });
   }

@@ -449,16 +449,18 @@ abstract class BaseRepository<P extends Base> implements Repository<P> {
   }: FindPaginated<P>): Promise<Page<Result<P>>> {
     const [docs, total] = await Promise.all([
       this.model
-        .find({
-          deleted: {
-            $in: uniq([null, false, withDeleted]),
+        .find(
+          {
+            deleted: {
+              $in: uniq([null, false, withDeleted]),
+            },
+            ...filters,
           },
-          ...filters,
-        })
+          select
+        )
         .setOptions({
           populate,
           sort: sort || { _id: -1 },
-          projection: select,
           limit: size,
           skip: (page - 1) * size,
         })

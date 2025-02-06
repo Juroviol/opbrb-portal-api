@@ -1,12 +1,27 @@
 import {
   GraphQLID,
-  GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
-  GraphQLNonNull,
 } from 'graphql';
-import { createUser, getUserById, getUsers } from '../resolvers/user.resolver';
+import {
+  authenticate,
+  createUser,
+  getLoggedUser,
+} from '../resolvers/user.resolver';
+import { GraphQLEnumType } from 'graphql/index';
+import { mapValues } from 'lodash';
+import { Role } from '../models/user.model';
+
+const RoleType = new GraphQLEnumType({
+  name: 'Role',
+  values: mapValues(Role, (value) => {
+    return {
+      value,
+    };
+  }),
+});
 
 const UserType = new GraphQLObjectType({
   name: 'User',
@@ -14,23 +29,16 @@ const UserType = new GraphQLObjectType({
     _id: { type: GraphQLID },
     name: { type: GraphQLString },
     email: { type: GraphQLString },
-    password: { type: GraphQLString },
+    role: { type: RoleType },
   }),
 });
 
 const RootQuery = new GraphQLObjectType({
   name: 'Query',
   fields: {
-    getUserById: {
+    getLoggedUser: {
       type: UserType,
-      args: {
-        _id: { type: GraphQLID },
-      },
-      resolve: getUserById,
-    },
-    getUsers: {
-      type: new GraphQLList(UserType),
-      resolve: getUsers,
+      resolve: getLoggedUser,
     },
   },
 });
@@ -44,8 +52,24 @@ const RootMutation = new GraphQLObjectType({
         name: { type: new GraphQLNonNull(GraphQLString) },
         email: { type: new GraphQLNonNull(GraphQLString) },
         password: { type: new GraphQLNonNull(GraphQLString) },
+        role: {
+          type: RoleType,
+        },
       },
       resolve: createUser,
+    },
+    authenticate: {
+      type: new GraphQLObjectType({
+        name: 'Token',
+        fields: () => ({
+          token: { type: GraphQLString },
+        }),
+      }),
+      args: {
+        username: { type: new GraphQLNonNull(GraphQLString) },
+        password: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: authenticate,
     },
   },
 });

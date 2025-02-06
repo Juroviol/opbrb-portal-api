@@ -3,12 +3,9 @@ import { createHandler } from 'graphql-http/lib/use/express';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 import schema from './schemas';
 import * as process from 'node:process';
-import AuthenticationRoute from './routes/authentication.route';
 import mongoose from 'mongoose';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
-import AuthenticationService from './services/authentication.service';
 import cors from 'cors';
 
 const app = express();
@@ -18,20 +15,6 @@ app.use(passport.initialize());
 app.get('/health-check', (_request, response) => {
   response.status(200).send('I am health!');
 });
-
-passport.use(
-  new LocalStrategy(async (username, password, done) => {
-    try {
-      const user = await AuthenticationService.validateUsernameAndPassword(
-        username,
-        password
-      );
-      return done(null, user);
-    } catch (e) {
-      done(e);
-    }
-  })
-);
 
 passport.use(
   new JwtStrategy(
@@ -45,8 +28,6 @@ passport.use(
     }
   )
 );
-
-app.use('/auth', AuthenticationRoute);
 
 app.all(
   '/graphql',

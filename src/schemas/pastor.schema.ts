@@ -1,16 +1,21 @@
 import {
   GraphQLEnumType,
   GraphQLID,
+  GraphQLInt,
+  GraphQLList,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
 } from 'graphql';
-import { GraphQLDate } from 'graphql-scalars';
-import { FieldNode } from 'graphql/language/ast';
-import PastorService from '../services/pastor.service';
-import { IPastor, MaritalStatus } from '../models/pastor.model';
+import { GraphQLDate, GraphQLDateTime } from 'graphql-scalars';
+import { MaritalStatus } from '../models/pastor.model';
 import { mapValues } from 'lodash';
 import { GraphQLUpload } from 'graphql-upload-ts';
+import {
+  createPastor,
+  getPastor,
+  getPastors,
+} from '../resolvers/pastor.resolver';
 
 const PastorFields = {
   _id: { type: GraphQLID },
@@ -36,11 +41,27 @@ const PastorFields = {
   district: { type: GraphQLString },
   zipCode: { type: GraphQLString },
   cellPhone: { type: GraphQLString },
+  church: { type: GraphQLString },
+  ordinanceTime: { type: GraphQLInt },
+  recommendationLetterUrl: { type: GraphQLString },
 };
 
 const PastorType = new GraphQLObjectType({
   name: 'Pastor',
-  fields: () => PastorFields,
+  fields: () => ({
+    ...PastorFields,
+    maritalStatus: { type: GraphQLString },
+    createdAt: { type: GraphQLDateTime },
+    status: { type: GraphQLString },
+  }),
+});
+
+const PastorPageType = new GraphQLObjectType({
+  name: 'Page',
+  fields: {
+    total: { type: GraphQLInt },
+    docs: { type: new GraphQLList(PastorType) },
+  },
 });
 
 const RootQuery = new GraphQLObjectType({
@@ -51,13 +72,15 @@ const RootQuery = new GraphQLObjectType({
       args: {
         id: { type: GraphQLID },
       },
-      resolve: async (_parent, args, _context, info) => {
-        const [fieldNode] = info.fieldNodes;
-        const selections = fieldNode.selectionSet?.selections as FieldNode[];
-        return PastorService.findById(args.id, {
-          select: selections?.map((s) => s.name.value as keyof IPastor),
-        });
+      resolve: getPastor,
+    },
+    getPastors: {
+      type: PastorPageType,
+      args: {
+        page: { type: GraphQLInt },
+        size: { type: GraphQLInt },
       },
+      resolve: getPastors,
     },
   },
 });
@@ -71,32 +94,7 @@ const RootMutation = new GraphQLObjectType({
         ...PastorFields,
         file: { type: GraphQLUpload },
       },
-      resolve: async (
-        _parent,
-        args: Omit<IPastor, '_id' | 'recommendationLetterUrl'> & {
-          file: Promise<{
-            filename: string;
-            mimetype: string;
-            createReadStream: () => NodeJS.ReadableStream;
-          }>;
-        }
-      ) => {
-        const { filename, mimetype, createReadStream } = await args.file;
-        const stream = createReadStream();
-        const chunks: Buffer[] = [];
-        const buffer = await new Promise<Buffer<ArrayBuffer>>((resolve) => {
-          stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-          stream.on('end', () => resolve(Buffer.concat(chunks)));
-        });
-        return PastorService.insert({
-          ...args,
-          file: {
-            filename,
-            mimetype,
-            buffer,
-          },
-        });
-      },
+      resolve: createPastor,
     },
   },
 });
