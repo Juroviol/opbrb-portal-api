@@ -24,6 +24,7 @@ export interface IPastor extends IUser {
   zipCode: string;
   cellPhone: string;
   recommendationLetterUrl?: string;
+  paymentConfirmationUrl?: string;
   status: Status;
   church: string;
   ordinanceTime: number;
@@ -46,7 +47,8 @@ export const PastorModel = UserModel.discriminator<IPastor>(
     district: { type: String, required: true },
     zipCode: { type: String, required: true },
     cellPhone: { type: String, required: true },
-    recommendationLetterUrl: { type: String },
+    recommendationLetterUrl: { type: String, required: true },
+    paymentConfirmationUrl: { type: String, required: true },
     church: { type: String, required: true },
     ordinanceTime: { type: Number, required: true },
     status: {

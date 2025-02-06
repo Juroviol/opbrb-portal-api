@@ -13,28 +13,54 @@ class PastorService extends BaseService<IPastor> {
     super(PastorRepository);
   }
 
-  async insert({
-    file,
-    ...props
-  }: Omit<IPastor, '_id' | 'recommendationLetterUrl'> & {
+  private async upload(
+    _id: Types.ObjectId,
     file: {
+      filename: string;
+      mimetype: string;
+      buffer: Buffer;
+    }
+  ) {
+    const fileUrl = `pastors/${_id}/${uuid()}.${file.filename
+      .split('.')
+      .pop()}`;
+    await FileApi.create(fileUrl, file.buffer, 'public-read', file.mimetype);
+    return fileUrl;
+  }
+
+  async insert({
+    fileLetter,
+    filePaymentConfirmation,
+    ...props
+  }: Omit<
+    IPastor,
+    '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
+  > & {
+    fileLetter: {
+      filename: string;
+      mimetype: string;
+      buffer: Buffer;
+    };
+    filePaymentConfirmation: {
       filename: string;
       mimetype: string;
       buffer: Buffer;
     };
   }): Promise<Result<IPastor>> {
     const _id = new Types.ObjectId();
-    const filePath = `pastors/${_id}/${uuid()}.${file.filename
-      .split('.')
-      .pop()}`;
-    await FileApi.create(filePath, file.buffer, 'public-read', file.mimetype);
+    const recommendationLetterUrl = await this.upload(_id, fileLetter);
+    const paymentConfirmationUrl = await this.upload(
+      _id,
+      filePaymentConfirmation
+    );
     const hashedPassword = await bcrypt.hash(props.password, 10);
     return super.insert({
       _id,
       ...props,
       password: hashedPassword,
       role: Role.PASTOR,
-      recommendationLetterUrl: filePath,
+      recommendationLetterUrl,
+      paymentConfirmationUrl,
     });
   }
 }

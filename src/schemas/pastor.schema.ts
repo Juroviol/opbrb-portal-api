@@ -44,6 +44,7 @@ const PastorFields = {
   church: { type: GraphQLString },
   ordinanceTime: { type: GraphQLInt },
   recommendationLetterUrl: { type: GraphQLString },
+  paymentConfirmationUrl: { type: GraphQLString },
 };
 
 const PastorType = new GraphQLObjectType({
@@ -92,7 +93,8 @@ const RootMutation = new GraphQLObjectType({
       type: PastorType,
       args: {
         ...PastorFields,
-        file: { type: GraphQLUpload },
+        fileLetter: { type: GraphQLUpload },
+        filePaymentConfirmation: { type: GraphQLUpload },
       },
       resolve: createPastor,
     },
