@@ -12,6 +12,12 @@ function streamToBuffer(stream: NodeJS.ReadableStream) {
   });
 }
 
+type FileType = Promise<{
+  filename: string;
+  mimetype: string;
+  createReadStream: () => NodeJS.ReadableStream;
+}>;
+
 export const getPastor: GraphQLFieldResolver<
   IPastor,
   { user: { id: string } },
@@ -28,17 +34,12 @@ export const getPastor: GraphQLFieldResolver<
 export const createPastor: GraphQLFieldResolver<
   IPastor,
   { user: { id: string } },
-  Omit<IPastor, '_id' | 'recommendationLetterUrl'> & {
-    fileLetter: Promise<{
-      filename: string;
-      mimetype: string;
-      createReadStream: () => NodeJS.ReadableStream;
-    }>;
-    filePaymentConfirmation: Promise<{
-      filename: string;
-      mimetype: string;
-      createReadStream: () => NodeJS.ReadableStream;
-    }>;
+  Omit<
+    IPastor,
+    '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
+  > & {
+    fileLetter: FileType;
+    filePaymentConfirmation?: FileType;
   },
   Promise<IPastor>
 > = async (
@@ -50,21 +51,28 @@ export const createPastor: GraphQLFieldResolver<
   }
 ) => {
   const fileLetter = await promiseFileLetter;
-  const filePaymentConfirmation = await promiseFilePaymentConfirmation;
   const fileLetterBuffer = await streamToBuffer(fileLetter.createReadStream());
-  const filePaymentConfirmationBuffer = await streamToBuffer(
-    filePaymentConfirmation.createReadStream()
-  );
+  let filePaymentConfirmation: typeof fileLetter | null = null;
+  let filePaymentConfirmationBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFilePaymentConfirmation) {
+    filePaymentConfirmation = await promiseFilePaymentConfirmation;
+    filePaymentConfirmationBuffer = await streamToBuffer(
+      filePaymentConfirmation.createReadStream()
+    );
+  }
   return PastorService.insert({
     ...args,
     fileLetter: {
       ...fileLetter,
       buffer: fileLetterBuffer,
     },
-    filePaymentConfirmation: {
-      ...filePaymentConfirmation,
-      buffer: filePaymentConfirmationBuffer,
-    },
+    ...(filePaymentConfirmation &&
+      filePaymentConfirmationBuffer && {
+        filePaymentConfirmation: {
+          ...filePaymentConfirmation,
+          buffer: filePaymentConfirmationBuffer,
+        },
+      }),
   });
 };
 

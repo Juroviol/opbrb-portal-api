@@ -48,7 +48,7 @@ export const PastorModel = UserModel.discriminator<IPastor>(
     zipCode: { type: String, required: true },
     cellPhone: { type: String, required: true },
     recommendationLetterUrl: { type: String, required: true },
-    paymentConfirmationUrl: { type: String, required: true },
+    paymentConfirmationUrl: { type: String },
     church: { type: String, required: true },
     ordinanceTime: { type: Number, required: true },
     status: {

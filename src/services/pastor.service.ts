@@ -41,7 +41,7 @@ class PastorService extends BaseService<IPastor> {
       mimetype: string;
       buffer: Buffer;
     };
-    filePaymentConfirmation: {
+    filePaymentConfirmation?: {
       filename: string;
       mimetype: string;
       buffer: Buffer;
@@ -49,10 +49,10 @@ class PastorService extends BaseService<IPastor> {
   }): Promise<Result<IPastor>> {
     const _id = new Types.ObjectId();
     const recommendationLetterUrl = await this.upload(_id, fileLetter);
-    const paymentConfirmationUrl = await this.upload(
-      _id,
-      filePaymentConfirmation
-    );
+    let paymentConfirmationUrl;
+    if (filePaymentConfirmation) {
+      paymentConfirmationUrl = await this.upload(_id, filePaymentConfirmation);
+    }
     const hashedPassword = await bcrypt.hash(props.password, 10);
     return super.insert({
       _id,
@@ -60,7 +60,7 @@ class PastorService extends BaseService<IPastor> {
       password: hashedPassword,
       role: Role.PASTOR,
       recommendationLetterUrl,
-      paymentConfirmationUrl,
+      ...(paymentConfirmationUrl && { paymentConfirmationUrl }),
     });
   }
 }

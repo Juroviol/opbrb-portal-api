@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
@@ -19,30 +20,32 @@ import {
 
 const PastorFields = {
   _id: { type: GraphQLID },
-  name: { type: GraphQLString },
-  cpf: { type: GraphQLString },
-  email: { type: GraphQLString },
-  password: { type: GraphQLString },
+  name: { type: new GraphQLNonNull(GraphQLString) },
+  cpf: { type: new GraphQLNonNull(GraphQLString) },
+  email: { type: new GraphQLNonNull(GraphQLString) },
+  password: { type: new GraphQLNonNull(GraphQLString) },
   maritalStatus: {
-    type: new GraphQLEnumType({
-      name: 'MaritalStatus',
-      values: mapValues(MaritalStatus, (value) => {
-        return {
-          value,
-        };
-      }),
-    }),
+    type: new GraphQLNonNull(
+      new GraphQLEnumType({
+        name: 'MaritalStatus',
+        values: mapValues(MaritalStatus, (value) => {
+          return {
+            value,
+          };
+        }),
+      })
+    ),
   },
-  birthday: { type: GraphQLDate },
-  street: { type: GraphQLString },
-  number: { type: GraphQLString },
-  city: { type: GraphQLString },
-  state: { type: GraphQLString },
-  district: { type: GraphQLString },
-  zipCode: { type: GraphQLString },
-  cellPhone: { type: GraphQLString },
-  church: { type: GraphQLString },
-  ordinanceTime: { type: GraphQLInt },
+  birthday: { type: new GraphQLNonNull(GraphQLDate) },
+  street: { type: new GraphQLNonNull(GraphQLString) },
+  number: { type: new GraphQLNonNull(GraphQLString) },
+  city: { type: new GraphQLNonNull(GraphQLString) },
+  state: { type: new GraphQLNonNull(GraphQLString) },
+  district: { type: new GraphQLNonNull(GraphQLString) },
+  zipCode: { type: new GraphQLNonNull(GraphQLString) },
+  cellPhone: { type: new GraphQLNonNull(GraphQLString) },
+  church: { type: new GraphQLNonNull(GraphQLString) },
+  ordinanceTime: { type: new GraphQLNonNull(GraphQLInt) },
   recommendationLetterUrl: { type: GraphQLString },
   paymentConfirmationUrl: { type: GraphQLString },
 };
@@ -93,7 +96,7 @@ const RootMutation = new GraphQLObjectType({
       type: PastorType,
       args: {
         ...PastorFields,
-        fileLetter: { type: GraphQLUpload },
+        fileLetter: { type: new GraphQLNonNull(GraphQLUpload) },
         filePaymentConfirmation: { type: GraphQLUpload },
       },
       resolve: createPastor,
