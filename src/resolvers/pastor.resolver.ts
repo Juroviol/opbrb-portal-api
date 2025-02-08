@@ -38,7 +38,7 @@ export const createPastor: GraphQLFieldResolver<
     IPastor,
     '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
   > & {
-    fileLetter: FileType;
+    fileLetter?: FileType;
     filePaymentConfirmation?: FileType;
   },
   Promise<IPastor>
@@ -50,8 +50,12 @@ export const createPastor: GraphQLFieldResolver<
     ...args
   }
 ) => {
-  const fileLetter = await promiseFileLetter;
-  const fileLetterBuffer = await streamToBuffer(fileLetter.createReadStream());
+  let fileLetter;
+  let fileLetterBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFileLetter) {
+    fileLetter = await promiseFileLetter;
+    fileLetterBuffer = await streamToBuffer(fileLetter.createReadStream());
+  }
   let filePaymentConfirmation: typeof fileLetter | null = null;
   let filePaymentConfirmationBuffer: Buffer<ArrayBuffer> | null = null;
   if (promiseFilePaymentConfirmation) {
@@ -62,10 +66,10 @@ export const createPastor: GraphQLFieldResolver<
   }
   return PastorService.insert({
     ...args,
-    fileLetter: {
+    ...(fileLetter && {
       ...fileLetter,
       buffer: fileLetterBuffer,
-    },
+    }),
     ...(filePaymentConfirmation &&
       filePaymentConfirmationBuffer && {
         filePaymentConfirmation: {

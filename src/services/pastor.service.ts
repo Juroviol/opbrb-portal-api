@@ -36,7 +36,7 @@ class PastorService extends BaseService<IPastor> {
     IPastor,
     '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
   > & {
-    fileLetter: {
+    fileLetter?: {
       filename: string;
       mimetype: string;
       buffer: Buffer;
@@ -48,7 +48,10 @@ class PastorService extends BaseService<IPastor> {
     };
   }): Promise<Result<IPastor>> {
     const _id = new Types.ObjectId();
-    const recommendationLetterUrl = await this.upload(_id, fileLetter);
+    let recommendationLetterUrl;
+    if (fileLetter) {
+      recommendationLetterUrl = await this.upload(_id, fileLetter);
+    }
     let paymentConfirmationUrl;
     if (filePaymentConfirmation) {
       paymentConfirmationUrl = await this.upload(_id, filePaymentConfirmation);
@@ -59,6 +62,7 @@ class PastorService extends BaseService<IPastor> {
       ...props,
       password: hashedPassword,
       role: Role.PASTOR,
+      ...(recommendationLetterUrl && { recommendationLetterUrl }),
       recommendationLetterUrl,
       ...(paymentConfirmationUrl && { paymentConfirmationUrl }),
     });

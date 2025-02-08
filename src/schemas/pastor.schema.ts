@@ -96,7 +96,7 @@ const RootMutation = new GraphQLObjectType({
       type: PastorType,
       args: {
         ...PastorFields,
-        fileLetter: { type: new GraphQLNonNull(GraphQLUpload) },
+        fileLetter: { type: GraphQLUpload },
         filePaymentConfirmation: { type: GraphQLUpload },
       },
       resolve: createPastor,
