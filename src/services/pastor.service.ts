@@ -5,7 +5,7 @@ import { Result } from '../repositories/repository';
 import FileApi from '../apis/file.api';
 import { Types } from 'mongoose';
 import { v4 as uuid } from 'uuid';
-import { Role } from '../models/user.model';
+import { Role, Scope } from '../models/user.model';
 import bcrypt from 'bcrypt';
 
 class PastorService extends BaseService<IPastor> {
@@ -62,6 +62,7 @@ class PastorService extends BaseService<IPastor> {
       ...props,
       password: hashedPassword,
       role: Role.PASTOR,
+      scopes: [Scope.CanListPastors, Scope.CanDetailPastor],
       ...(recommendationLetterUrl && { recommendationLetterUrl }),
       recommendationLetterUrl,
       ...(paymentConfirmationUrl && { paymentConfirmationUrl }),
