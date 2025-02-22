@@ -31,6 +31,7 @@
     "@graphql-tools/schema": "^10.0.16",
     "aws-sdk": "^2.1692.0",
     "bcrypt": "^5.1.1",
+    "brazilian-values": "^0.13.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "graphiql": "^3.8.3",
