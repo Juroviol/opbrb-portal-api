@@ -82,7 +82,7 @@ abstract class BaseRepository<P extends Base> implements Repository<P> {
   update(
     id: string | Types.ObjectId,
     props: PropValue<Partial<P>>,
-    options: Pick<Options<P>, 'withDeleted' | 'populate'> = {}
+    options: Pick<Options<P>, 'withDeleted' | 'populate' | 'select'> = {}
   ): Promise<Result<P> | null> {
     return <Promise<Result<P> | null>>this.model
       .findOneAndUpdate(
@@ -96,6 +96,7 @@ abstract class BaseRepository<P extends Base> implements Repository<P> {
         {
           new: true,
           populate: options?.populate,
+          projection: options.select,
         }
       )
       .lean()

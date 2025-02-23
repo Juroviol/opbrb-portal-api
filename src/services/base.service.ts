@@ -304,7 +304,7 @@ abstract class BaseService<P> implements Service<P> {
   update(
     id: string | Types.ObjectId,
     props: PropValue<Partial<P>>,
-    options?: Pick<Options<P>, 'withDeleted' | 'populate'>
+    options?: Pick<Options<P>, 'withDeleted' | 'populate' | 'select'>
   ): Promise<Result<P> | null> {
     return this.repository.update(id, props, options);
   }
