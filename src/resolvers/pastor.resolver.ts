@@ -18,7 +18,7 @@ type FileType = Promise<{
   createReadStream: () => NodeJS.ReadableStream;
 }>;
 
-export const getPastor: GraphQLFieldResolver<
+export const getById: GraphQLFieldResolver<
   IPastor,
   { user: { id: string } },
   { id: string },
@@ -31,16 +31,18 @@ export const getPastor: GraphQLFieldResolver<
   });
 };
 
-export const createPastor: GraphQLFieldResolver<
+type CreatePastorArgs = Omit<
   IPastor,
+  '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
+> & {
+  fileLetter?: FileType;
+  filePaymentConfirmation?: FileType;
+};
+
+export const create: GraphQLFieldResolver<
+  unknown,
   { user: { id: string } },
-  Omit<
-    IPastor,
-    '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
-  > & {
-    fileLetter?: FileType;
-    filePaymentConfirmation?: FileType;
-  },
+  CreatePastorArgs,
   Promise<IPastor>
 > = async (
   _parent,
@@ -80,7 +82,31 @@ export const createPastor: GraphQLFieldResolver<
   });
 };
 
-export const getPastors: GraphQLFieldResolver<
+type UpdatePersonalInfoArgs = Partial<
+  Pick<IPastor, 'name' | 'cpf' | 'maritalStatus' | 'birthday'>
+> &
+  Required<Pick<IPastor, '_id'>>;
+
+export const updatePersonalInfo: GraphQLFieldResolver<
+  unknown,
+  { user: { id: string } },
+  UpdatePersonalInfoArgs,
+  Promise<IPastor>
+> = async (_, args, ctx, info) => {
+  if (!ctx.user) {
+    throw new Error('No user logged in.');
+  }
+  const { _id } = args;
+  const [fieldNode] = info.fieldNodes;
+  const result = await PastorService.update(_id, args, {
+    select: (fieldNode.selectionSet?.selections as FieldNode[]).map(
+      (s) => s.name.value as keyof IPastor
+    ),
+  });
+  return result!;
+};
+
+export const list: GraphQLFieldResolver<
   unknown,
   { user: { id: string } },
   { page: number; size: number },

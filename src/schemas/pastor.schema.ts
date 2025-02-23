@@ -13,10 +13,20 @@ import { MaritalStatus } from '../models/pastor.model';
 import { mapValues } from 'lodash';
 import { GraphQLUpload } from 'graphql-upload-ts';
 import {
-  createPastor,
-  getPastor,
-  getPastors,
+  create,
+  getById,
+  list,
+  updatePersonalInfo,
 } from '../resolvers/pastor.resolver';
+
+const MaritalStatusType = new GraphQLEnumType({
+  name: 'MaritalStatus',
+  values: mapValues(MaritalStatus, (value) => {
+    return {
+      value,
+    };
+  }),
+});
 
 const PastorFields = {
   _id: { type: GraphQLID },
@@ -25,16 +35,7 @@ const PastorFields = {
   email: { type: new GraphQLNonNull(GraphQLString) },
   password: { type: new GraphQLNonNull(GraphQLString) },
   maritalStatus: {
-    type: new GraphQLNonNull(
-      new GraphQLEnumType({
-        name: 'MaritalStatus',
-        values: mapValues(MaritalStatus, (value) => {
-          return {
-            value,
-          };
-        }),
-      })
-    ),
+    type: new GraphQLNonNull(MaritalStatusType),
   },
   birthday: { type: new GraphQLNonNull(GraphQLDate) },
   street: { type: new GraphQLNonNull(GraphQLString) },
@@ -54,7 +55,6 @@ const PastorType = new GraphQLObjectType({
   name: 'Pastor',
   fields: () => ({
     ...PastorFields,
-    maritalStatus: { type: GraphQLString },
     createdAt: { type: GraphQLDateTime },
     status: { type: GraphQLString },
   }),
@@ -76,7 +76,7 @@ const RootQuery = new GraphQLObjectType({
       args: {
         id: { type: GraphQLID },
       },
-      resolve: getPastor,
+      resolve: getById,
     },
     getPastors: {
       type: PastorPageType,
@@ -84,7 +84,7 @@ const RootQuery = new GraphQLObjectType({
         page: { type: GraphQLInt },
         size: { type: GraphQLInt },
       },
-      resolve: getPastors,
+      resolve: list,
     },
   },
 });
@@ -99,7 +99,18 @@ const RootMutation = new GraphQLObjectType({
         fileLetter: { type: GraphQLUpload },
         filePaymentConfirmation: { type: GraphQLUpload },
       },
-      resolve: createPastor,
+      resolve: create,
+    },
+    updatePastorPersonalInfo: {
+      type: PastorType,
+      args: {
+        _id: { type: new GraphQLNonNull(GraphQLID) },
+        name: { type: GraphQLString },
+        cpf: { type: GraphQLString },
+        maritalStatus: { type: MaritalStatusType },
+        birthday: { type: GraphQLDate },
+      },
+      resolve: updatePersonalInfo,
     },
   },
 });
