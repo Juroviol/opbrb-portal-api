@@ -68,10 +68,13 @@ export const create: GraphQLFieldResolver<
   }
   return PastorService.insert({
     ...args,
-    ...(fileLetter && {
-      ...fileLetter,
-      buffer: fileLetterBuffer,
-    }),
+    ...(fileLetter &&
+      fileLetterBuffer && {
+        fileLetter: {
+          ...fileLetter,
+          buffer: fileLetterBuffer,
+        },
+      }),
     ...(filePaymentConfirmation &&
       filePaymentConfirmationBuffer && {
         filePaymentConfirmation: {
@@ -82,28 +85,80 @@ export const create: GraphQLFieldResolver<
   });
 };
 
-type UpdatePersonalInfoArgs = Partial<
-  Pick<IPastor, 'name' | 'cpf' | 'maritalStatus' | 'birthday'>
-> &
-  Required<Pick<IPastor, '_id'>>;
+type UpdatePastorArgs = Partial<IPastor> &
+  Required<Pick<IPastor, '_id'>> & {
+    newPassword?: string;
+    fileLetter?: FileType;
+    filePaymentConfirmation?: FileType;
+  };
 
-export const updatePersonalInfo: GraphQLFieldResolver<
+export const updatePastor: GraphQLFieldResolver<
   unknown,
   { user: { id: string } },
-  UpdatePersonalInfoArgs,
+  UpdatePastorArgs,
   Promise<IPastor>
-> = async (_, args, ctx, info) => {
+> = async (
+  _,
+  {
+    fileLetter: promiseFileLetter,
+    filePaymentConfirmation: promiseFilePaymentConfirmation,
+    ...args
+  },
+  ctx,
+  info
+) => {
   if (!ctx.user) {
     throw new Error('No user logged in.');
   }
+
   const { _id } = args;
+
   const [fieldNode] = info.fieldNodes;
-  const result = await PastorService.update(_id, args, {
-    select: (fieldNode.selectionSet?.selections as FieldNode[]).map(
-      (s) => s.name.value as keyof IPastor
-    ),
-  });
-  return result!;
+  const select = (fieldNode.selectionSet?.selections as FieldNode[]).map(
+    (s) => s.name.value as keyof IPastor
+  );
+
+  let fileLetter;
+  let fileLetterBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFileLetter) {
+    fileLetter = await promiseFileLetter;
+    fileLetterBuffer = await streamToBuffer(fileLetter.createReadStream());
+  }
+  let filePaymentConfirmation: typeof fileLetter | null = null;
+  let filePaymentConfirmationBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFilePaymentConfirmation) {
+    filePaymentConfirmation = await promiseFilePaymentConfirmation;
+    filePaymentConfirmationBuffer = await streamToBuffer(
+      filePaymentConfirmation.createReadStream()
+    );
+  }
+  const result = await PastorService.update(
+    _id,
+    {
+      ...args,
+      ...(fileLetter &&
+        fileLetterBuffer && {
+          fileLetter: {
+            ...fileLetter,
+            buffer: fileLetterBuffer,
+          },
+        }),
+      ...(filePaymentConfirmation &&
+        filePaymentConfirmationBuffer && {
+          filePaymentConfirmation: {
+            ...filePaymentConfirmation,
+            buffer: filePaymentConfirmationBuffer,
+          },
+        }),
+    },
+    {
+      select,
+    }
+  );
+  if (!result) {
+    throw new Error('No pastor found');
+  }
+  return result;
 };
 
 export const list: GraphQLFieldResolver<

@@ -1,13 +1,15 @@
 import BaseService from './base.service';
 import { IPastor } from '../models/pastor.model';
 import PastorRepository from '../repositories/pastor.repository';
-import { Result } from '../repositories/repository';
+import { PropValue, Result, Options } from '../repositories/repository';
 import FileApi from '../apis/file.api';
 import { Types } from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import { Role, Scope } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import { formatToCapitalized } from 'brazilian-values';
+import UserService from './user.service';
+import { omit } from 'lodash';
 
 class PastorService extends BaseService<IPastor> {
   constructor() {
@@ -69,6 +71,74 @@ class PastorService extends BaseService<IPastor> {
       recommendationLetterUrl,
       ...(paymentConfirmationUrl && { paymentConfirmationUrl }),
     });
+  }
+
+  async update(
+    id: string | Types.ObjectId,
+    props: Partial<
+      IPastor & { newPassword: string } & {
+        fileLetter: {
+          filename: string;
+          mimetype: string;
+          buffer: Buffer;
+        };
+        filePaymentConfirmation: {
+          filename: string;
+          mimetype: string;
+          buffer: Buffer;
+        };
+      }
+    >,
+    options?: Pick<Options<IPastor>, 'withDeleted' | 'populate' | 'select'>
+  ): Promise<Result<IPastor> | null> {
+    const pastor = await this.findById(id);
+    if (!pastor) {
+      throw new Error('Pastor not found.');
+    }
+    if (props.password && props.newPassword) {
+      await UserService.validateUsernameAndPassword(
+        pastor.email,
+        props.password
+      );
+      props.password = await bcrypt.hash(props.newPassword, 10);
+    } else {
+      props.password = pastor.password;
+    }
+
+    let recommendationLetterUrl;
+    if (props.fileLetter) {
+      if (pastor.recommendationLetterUrl) {
+        await FileApi.delete([{ Key: pastor.recommendationLetterUrl }]);
+      }
+      recommendationLetterUrl = await this.upload(
+        new Types.ObjectId(id),
+        props.fileLetter
+      );
+    }
+    let paymentConfirmationUrl;
+    if (props.filePaymentConfirmation) {
+      if (pastor.paymentConfirmationUrl) {
+        await FileApi.delete([{ Key: pastor.paymentConfirmationUrl }]);
+      }
+      paymentConfirmationUrl = await this.upload(
+        new Types.ObjectId(id),
+        props.filePaymentConfirmation
+      );
+    }
+
+    return super.update(
+      id,
+      {
+        ...omit(props, '_id'),
+        ...(recommendationLetterUrl && {
+          recommendationLetterUrl,
+        }),
+        ...(paymentConfirmationUrl && {
+          paymentConfirmationUrl,
+        }),
+      },
+      options
+    );
   }
 }
 
