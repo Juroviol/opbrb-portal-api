@@ -1,7 +1,7 @@
 import BaseService from './base.service';
 import { IPastor } from '../models/pastor.model';
 import PastorRepository from '../repositories/pastor.repository';
-import { PropValue, Result, Options } from '../repositories/repository';
+import { Options, Result } from '../repositories/repository';
 import FileApi from '../apis/file.api';
 import { Types } from 'mongoose';
 import { v4 as uuid } from 'uuid';
