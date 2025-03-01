@@ -37,6 +37,8 @@ type CreatePastorArgs = Omit<
 > & {
   fileLetter?: FileType;
   filePaymentConfirmation?: FileType;
+  fileOrdinationMinutes?: FileType;
+  filePicture?: FileType;
 };
 
 export const create: GraphQLFieldResolver<
@@ -49,6 +51,8 @@ export const create: GraphQLFieldResolver<
   {
     fileLetter: promiseFileLetter,
     filePaymentConfirmation: promiseFilePaymentConfirmation,
+    fileOrdinationMinutes: promiseFileOrdinationMinutes,
+    filePicture: promiseFilePicture,
     ...args
   }
 ) => {
@@ -66,6 +70,20 @@ export const create: GraphQLFieldResolver<
       filePaymentConfirmation.createReadStream()
     );
   }
+  let fileOrdinationMinutes: typeof fileLetter | null = null;
+  let fileOrdinationMinutesBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFileOrdinationMinutes) {
+    fileOrdinationMinutes = await promiseFileOrdinationMinutes;
+    fileOrdinationMinutesBuffer = await streamToBuffer(
+      fileOrdinationMinutes.createReadStream()
+    );
+  }
+  let filePicture: typeof fileLetter | null = null;
+  let filePictureBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFilePicture) {
+    filePicture = await promiseFilePicture;
+    filePictureBuffer = await streamToBuffer(filePicture.createReadStream());
+  }
   return PastorService.insert({
     ...args,
     ...(fileLetter &&
@@ -82,6 +100,20 @@ export const create: GraphQLFieldResolver<
           buffer: filePaymentConfirmationBuffer,
         },
       }),
+    ...(fileOrdinationMinutes &&
+      fileOrdinationMinutesBuffer && {
+        fileOrdinationMinutes: {
+          ...fileOrdinationMinutes,
+          buffer: fileOrdinationMinutesBuffer,
+        },
+      }),
+    ...(filePicture &&
+      filePictureBuffer && {
+        filePicture: {
+          ...filePicture,
+          buffer: filePictureBuffer,
+        },
+      }),
   });
 };
 
@@ -90,6 +122,8 @@ type UpdatePastorArgs = Partial<IPastor> &
     newPassword?: string;
     fileLetter?: FileType;
     filePaymentConfirmation?: FileType;
+    fileOrdinationMinutes?: FileType;
+    filePicture?: FileType;
   };
 
 export const updatePastor: GraphQLFieldResolver<
@@ -102,6 +136,8 @@ export const updatePastor: GraphQLFieldResolver<
   {
     fileLetter: promiseFileLetter,
     filePaymentConfirmation: promiseFilePaymentConfirmation,
+    fileOrdinationMinutes: promiseFileOrdinationMinutes,
+    filePicture: promiseFilePicture,
     ...args
   },
   ctx,
@@ -132,6 +168,20 @@ export const updatePastor: GraphQLFieldResolver<
       filePaymentConfirmation.createReadStream()
     );
   }
+  let fileOrdinationMinutes: typeof fileLetter | null = null;
+  let fileOrdinationMinutesBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFileOrdinationMinutes) {
+    fileOrdinationMinutes = await promiseFileOrdinationMinutes;
+    fileOrdinationMinutesBuffer = await streamToBuffer(
+      fileOrdinationMinutes.createReadStream()
+    );
+  }
+  let filePicture: typeof fileLetter | null = null;
+  let filePictureBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFilePicture) {
+    filePicture = await promiseFilePicture;
+    filePictureBuffer = await streamToBuffer(filePicture.createReadStream());
+  }
   const result = await PastorService.update(
     _id,
     {
@@ -148,6 +198,20 @@ export const updatePastor: GraphQLFieldResolver<
           filePaymentConfirmation: {
             ...filePaymentConfirmation,
             buffer: filePaymentConfirmationBuffer,
+          },
+        }),
+      ...(fileOrdinationMinutes &&
+        fileOrdinationMinutesBuffer && {
+          fileOrdinationMinutes: {
+            ...fileOrdinationMinutes,
+            buffer: fileOrdinationMinutesBuffer,
+          },
+        }),
+      ...(filePicture &&
+        filePictureBuffer && {
+          filePicture: {
+            ...filePicture,
+            buffer: filePictureBuffer,
           },
         }),
     },

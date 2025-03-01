@@ -25,6 +25,7 @@ export interface IUser extends Base {
   role: Role;
   createdAt: Date;
   scopes: Scope[];
+  pictureUrl?: string;
 }
 const UserSchema = new Schema({
   name: { type: String, required: true },
@@ -37,6 +38,7 @@ const UserSchema = new Schema({
     enum: Object.values(Scope),
     required: true,
   },
+  pictureUrl: { type: String },
 });
 
 export const UserModel = mongoose.model<IUser>('User', UserSchema);

@@ -32,6 +32,7 @@ const UserType = new GraphQLObjectType({
     email: { type: GraphQLString },
     role: { type: RoleType },
     scopes: { type: new GraphQLList(GraphQLString) },
+    pictureUrl: { type: GraphQLString },
   }),
 });
 

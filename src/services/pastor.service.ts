@@ -11,6 +11,12 @@ import { formatToCapitalized } from 'brazilian-values';
 import UserService from './user.service';
 import { omit } from 'lodash';
 
+type FileType = {
+  filename: string;
+  mimetype: string;
+  buffer: Buffer;
+};
+
 class PastorService extends BaseService<IPastor> {
   constructor() {
     super(PastorRepository);
@@ -34,21 +40,21 @@ class PastorService extends BaseService<IPastor> {
   async insert({
     fileLetter,
     filePaymentConfirmation,
+    fileOrdinationMinutes,
+    filePicture,
     ...props
   }: Omit<
     IPastor,
-    '_id' | 'recommendationLetterUrl' | 'paymentConfirmationUrl'
+    | '_id'
+    | 'recommendationLetterUrl'
+    | 'paymentConfirmationUrl'
+    | 'ordinationMinutesUrl'
+    | 'pictureUrl'
   > & {
-    fileLetter?: {
-      filename: string;
-      mimetype: string;
-      buffer: Buffer;
-    };
-    filePaymentConfirmation?: {
-      filename: string;
-      mimetype: string;
-      buffer: Buffer;
-    };
+    fileLetter?: FileType;
+    filePaymentConfirmation?: FileType;
+    fileOrdinationMinutes?: FileType;
+    filePicture?: FileType;
   }): Promise<Result<IPastor>> {
     const _id = new Types.ObjectId();
     let recommendationLetterUrl;
@@ -59,6 +65,14 @@ class PastorService extends BaseService<IPastor> {
     if (filePaymentConfirmation) {
       paymentConfirmationUrl = await this.upload(_id, filePaymentConfirmation);
     }
+    let ordinationMinutesUrl;
+    if (fileOrdinationMinutes) {
+      ordinationMinutesUrl = await this.upload(_id, fileOrdinationMinutes);
+    }
+    let pictureUrl;
+    if (filePicture) {
+      pictureUrl = await this.upload(_id, filePicture);
+    }
     const hashedPassword = await bcrypt.hash(props.password, 10);
     return super.insert({
       _id,
@@ -67,9 +81,10 @@ class PastorService extends BaseService<IPastor> {
       password: hashedPassword,
       role: Role.PASTOR,
       scopes: [Scope.CanListPastors, Scope.CanDetailPastor],
-      ...(recommendationLetterUrl && { recommendationLetterUrl }),
       recommendationLetterUrl,
-      ...(paymentConfirmationUrl && { paymentConfirmationUrl }),
+      paymentConfirmationUrl,
+      ordinationMinutesUrl,
+      pictureUrl,
     });
   }
 
@@ -77,16 +92,10 @@ class PastorService extends BaseService<IPastor> {
     id: string | Types.ObjectId,
     props: Partial<
       IPastor & { newPassword: string } & {
-        fileLetter: {
-          filename: string;
-          mimetype: string;
-          buffer: Buffer;
-        };
-        filePaymentConfirmation: {
-          filename: string;
-          mimetype: string;
-          buffer: Buffer;
-        };
+        fileLetter?: FileType;
+        filePaymentConfirmation?: FileType;
+        fileOrdinationMinutes?: FileType;
+        filePicture?: FileType;
       }
     >,
     options?: Pick<Options<IPastor>, 'withDeleted' | 'populate' | 'select'>
@@ -126,6 +135,25 @@ class PastorService extends BaseService<IPastor> {
       );
     }
 
+    let ordinationMinutesUrl;
+    if (props.fileOrdinationMinutes) {
+      if (pastor.ordinationMinutesUrl) {
+        await FileApi.delete([{ Key: pastor.ordinationMinutesUrl }]);
+      }
+      ordinationMinutesUrl = await this.upload(
+        new Types.ObjectId(id),
+        props.fileOrdinationMinutes
+      );
+    }
+
+    let pictureUrl;
+    if (props.filePicture) {
+      if (pastor.pictureUrl) {
+        await FileApi.delete([{ Key: pastor.pictureUrl }]);
+      }
+      pictureUrl = await this.upload(new Types.ObjectId(id), props.filePicture);
+    }
+
     return super.update(
       id,
       {
@@ -135,6 +163,12 @@ class PastorService extends BaseService<IPastor> {
         }),
         ...(paymentConfirmationUrl && {
           paymentConfirmationUrl,
+        }),
+        ...(ordinationMinutesUrl && {
+          ordinationMinutesUrl,
+        }),
+        ...(pictureUrl && {
+          pictureUrl,
         }),
       },
       options
