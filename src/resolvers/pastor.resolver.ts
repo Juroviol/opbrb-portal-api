@@ -39,6 +39,7 @@ type CreatePastorArgs = Omit<
   filePaymentConfirmation?: FileType;
   fileOrdinationMinutes?: FileType;
   filePicture?: FileType;
+  fileCpfRg?: FileType;
 };
 
 export const create: GraphQLFieldResolver<
@@ -53,6 +54,7 @@ export const create: GraphQLFieldResolver<
     filePaymentConfirmation: promiseFilePaymentConfirmation,
     fileOrdinationMinutes: promiseFileOrdinationMinutes,
     filePicture: promiseFilePicture,
+    fileCpfRg: promiseFileCpfRg,
     ...args
   }
 ) => {
@@ -84,6 +86,12 @@ export const create: GraphQLFieldResolver<
     filePicture = await promiseFilePicture;
     filePictureBuffer = await streamToBuffer(filePicture.createReadStream());
   }
+  let fileCpfRg: typeof fileLetter | null = null;
+  let fileCpfRgBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFileCpfRg) {
+    fileCpfRg = await promiseFileCpfRg;
+    fileCpfRgBuffer = await streamToBuffer(fileCpfRg.createReadStream());
+  }
   return PastorService.insert({
     ...args,
     ...(fileLetter &&
@@ -114,6 +122,13 @@ export const create: GraphQLFieldResolver<
           buffer: filePictureBuffer,
         },
       }),
+    ...(fileCpfRg &&
+      fileCpfRgBuffer && {
+        fileCpfRg: {
+          ...fileCpfRg,
+          buffer: fileCpfRgBuffer,
+        },
+      }),
   });
 };
 
@@ -124,6 +139,7 @@ type UpdatePastorArgs = Partial<IPastor> &
     filePaymentConfirmation?: FileType;
     fileOrdinationMinutes?: FileType;
     filePicture?: FileType;
+    fileCpfRg?: FileType;
   };
 
 export const updatePastor: GraphQLFieldResolver<
@@ -138,6 +154,7 @@ export const updatePastor: GraphQLFieldResolver<
     filePaymentConfirmation: promiseFilePaymentConfirmation,
     fileOrdinationMinutes: promiseFileOrdinationMinutes,
     filePicture: promiseFilePicture,
+    fileCpfRg: promiseFileCpfRg,
     ...args
   },
   ctx,
@@ -182,6 +199,12 @@ export const updatePastor: GraphQLFieldResolver<
     filePicture = await promiseFilePicture;
     filePictureBuffer = await streamToBuffer(filePicture.createReadStream());
   }
+  let fileCpfRg: typeof fileLetter | null = null;
+  let fileCpfRgBuffer: Buffer<ArrayBuffer> | null = null;
+  if (promiseFileCpfRg) {
+    fileCpfRg = await promiseFileCpfRg;
+    fileCpfRgBuffer = await streamToBuffer(fileCpfRg.createReadStream());
+  }
   const result = await PastorService.update(
     _id,
     {
@@ -212,6 +235,13 @@ export const updatePastor: GraphQLFieldResolver<
           filePicture: {
             ...filePicture,
             buffer: filePictureBuffer,
+          },
+        }),
+      ...(fileCpfRg &&
+        fileCpfRgBuffer && {
+          fileCpfRg: {
+            ...fileCpfRg,
+            buffer: fileCpfRgBuffer,
           },
         }),
     },

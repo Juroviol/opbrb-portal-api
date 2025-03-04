@@ -42,6 +42,7 @@ class PastorService extends BaseService<IPastor> {
     filePaymentConfirmation,
     fileOrdinationMinutes,
     filePicture,
+    fileCpfRg,
     ...props
   }: Omit<
     IPastor,
@@ -50,11 +51,13 @@ class PastorService extends BaseService<IPastor> {
     | 'paymentConfirmationUrl'
     | 'ordinationMinutesUrl'
     | 'pictureUrl'
+    | 'cpfRgUrl'
   > & {
     fileLetter?: FileType;
     filePaymentConfirmation?: FileType;
     fileOrdinationMinutes?: FileType;
     filePicture?: FileType;
+    fileCpfRg?: FileType;
   }): Promise<Result<IPastor>> {
     const _id = new Types.ObjectId();
     let recommendationLetterUrl;
@@ -73,6 +76,10 @@ class PastorService extends BaseService<IPastor> {
     if (filePicture) {
       pictureUrl = await this.upload(_id, filePicture);
     }
+    let cpfRgUrl;
+    if (fileCpfRg) {
+      cpfRgUrl = await this.upload(_id, fileCpfRg);
+    }
     const hashedPassword = await bcrypt.hash(props.password, 10);
     return super.insert({
       _id,
@@ -80,11 +87,21 @@ class PastorService extends BaseService<IPastor> {
       name: formatToCapitalized(props.name),
       password: hashedPassword,
       role: Role.PASTOR,
-      scopes: [Scope.CanListPastors, Scope.CanDetailPastor],
+      scopes: [
+        Scope.CanListPastors,
+        Scope.CanDetailPastor,
+        Scope.CanEditProfilePersonalInfo,
+        Scope.CanEditProfileAddress,
+        Scope.CanEditProfileContactInfo,
+        Scope.CanEditProfileMinistry,
+        Scope.CanEditProfileOrderCard,
+        Scope.CanEditProfileCredentials,
+      ],
       recommendationLetterUrl,
       paymentConfirmationUrl,
       ordinationMinutesUrl,
       pictureUrl,
+      cpfRgUrl,
     });
   }
 
@@ -96,6 +113,7 @@ class PastorService extends BaseService<IPastor> {
         filePaymentConfirmation?: FileType;
         fileOrdinationMinutes?: FileType;
         filePicture?: FileType;
+        fileCpfRg?: FileType;
       }
     >,
     options?: Pick<Options<IPastor>, 'withDeleted' | 'populate' | 'select'>
@@ -154,6 +172,14 @@ class PastorService extends BaseService<IPastor> {
       pictureUrl = await this.upload(new Types.ObjectId(id), props.filePicture);
     }
 
+    let cpfRgUrl;
+    if (props.fileCpfRg) {
+      if (pastor.cpfRgUrl) {
+        await FileApi.delete([{ Key: pastor.cpfRgUrl }]);
+      }
+      cpfRgUrl = await this.upload(new Types.ObjectId(id), props.fileCpfRg);
+    }
+
     return super.update(
       id,
       {
@@ -169,6 +195,9 @@ class PastorService extends BaseService<IPastor> {
         }),
         ...(pictureUrl && {
           pictureUrl,
+        }),
+        ...(cpfRgUrl && {
+          cpfRgUrl,
         }),
       },
       options
