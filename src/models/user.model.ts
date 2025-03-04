@@ -22,6 +22,8 @@ export enum Scope {
   CanRejectPastorFinancialAnalysis = 'CanRejectPastorFinancialAnalysis',
   CanDownloadPastorRecommendationLetter = 'CanDownloadPastorRecommendationLetter',
   CanDownloadPastorPaymentConfirmation = 'CanDownloadPaymentConfirmation',
+  CanDownloadPastorOrdinationMinutes = 'CanDownloadPastorOrdinationMinutes',
+  CanDownloadPastorCpfRg = 'CanDownloadPastorCpfRg',
 }
 
 export interface IUser extends Base {
