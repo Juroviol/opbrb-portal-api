@@ -287,7 +287,7 @@ export const approveAnalysis: GraphQLFieldResolver<
   ResolverCtx,
   Required<Pick<IPastor, '_id'>> & { type: AnalysisType },
   Promise<Boolean>
-> = requireAuth(async (_, args, ctx, info) => {
+> = requireAuth(async (_, args, ctx) => {
   const pastor = await PastorService.findById(args._id);
   if (!pastor) {
     throw new Error('No pastor found');
@@ -325,7 +325,7 @@ export const createPastorPendingItemAnalysis: GraphQLFieldResolver<
   ResolverCtx,
   Required<Pick<IPastor, '_id'>> & { type: AnalysisType; reason: string },
   Promise<Boolean>
-> = requireAuth(async (_, args, ctx, info) => {
+> = requireAuth(async (_, args, ctx) => {
   const pastor = await PastorService.findById(args._id);
   if (!pastor) {
     throw new Error('No pastor found');
