@@ -16,7 +16,7 @@ import {
   deleteById,
 } from '../resolvers/profile.resolver';
 import { Scope } from '../models/user.model';
-import { GraphQLNonNull } from 'graphql/index';
+import { GraphQLNonNull } from 'graphql';
 
 const ScopeEnumType = new GraphQLEnumType({
   name: 'Scope',

@@ -31,7 +31,7 @@ export const create: GraphQLFieldResolver<
   ResolverCtx,
   CreateProfileArgs,
   Promise<IProfile>
-> = requireAuth(async (_, args, ctx, info) => {
+> = requireAuth(async (_, args) => {
   return ProfileService.insert(args);
 });
 
@@ -40,12 +40,17 @@ export const updateById: GraphQLFieldResolver<
   ResolverCtx,
   IProfile,
   Promise<IProfile>
-> = requireAuth(async (_, { _id, ...args }, ctx, info) => {
-  const result = await ProfileService.update(new Types.ObjectId(_id), args);
+> = requireAuth(async (_, { _id, ...args }, _ctx, info) => {
+  const [fieldNode] = info.fieldNodes;
+  const selections = fieldNode.selectionSet?.selections as FieldNode[];
+  let result = await ProfileService.update(new Types.ObjectId(_id), args);
   if (!result) {
     throw new Error('No pastor found');
   }
-  return result;
+  result = await ProfileService.findById(_id!, {
+    select: selections?.map((s) => s.name.value as keyof IProfile),
+  });
+  return result!;
 });
 
 export const getById: GraphQLFieldResolver<
@@ -66,7 +71,7 @@ export const deleteById: GraphQLFieldResolver<
   ResolverCtx,
   { _id: string },
   Promise<boolean>
-> = requireAuth(async (_parent, args, _context, info) => {
+> = requireAuth(async (_parent, args, _context) => {
   await ProfileService.remove(args._id);
   return true;
 });
