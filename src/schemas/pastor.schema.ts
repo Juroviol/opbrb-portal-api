@@ -120,6 +120,7 @@ const RootQuery = new GraphQLObjectType({
       args: {
         page: { type: new GraphQLNonNull(GraphQLInt) },
         size: { type: new GraphQLNonNull(GraphQLInt) },
+        name: { type: GraphQLString },
       },
       resolve: list,
     },

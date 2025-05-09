@@ -75,3 +75,12 @@ export const deleteById: GraphQLFieldResolver<
   await ProfileService.remove(args._id);
   return true;
 });
+
+export const assignProfileToPastors: GraphQLFieldResolver<
+  unknown,
+  ResolverCtx,
+  { profile: string; pastors: string[] },
+  Promise<Boolean>
+> = requireAuth(async (_, args, _context) => {
+  return ProfileService.assignProfileToPastors(args.profile, args.pastors);
+});

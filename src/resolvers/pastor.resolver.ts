@@ -263,7 +263,7 @@ export const update: GraphQLFieldResolver<
 export const list: GraphQLFieldResolver<
   unknown,
   ResolverCtx,
-  PageArg,
+  PageArg & { name?: string },
   Promise<Page<IPastor>>
 > = requireAuth((_, args, ctx, info) => {
   const [fieldNode] = info.fieldNodes;
@@ -272,6 +272,12 @@ export const list: GraphQLFieldResolver<
     page: args.page,
     size: args.size,
     filters: {
+      ...(args.name && {
+        name: {
+          $regex: args.name,
+          $options: 'i',
+        },
+      }),
       _id: {
         $ne: new Types.ObjectId(ctx.user.id),
       },

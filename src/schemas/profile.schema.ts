@@ -14,6 +14,7 @@ import {
   getById,
   updateById,
   deleteById,
+  assignProfileToPastors,
 } from '../resolvers/profile.resolver';
 import { Scope } from '../models/user.model';
 import { GraphQLNonNull } from 'graphql';
@@ -93,6 +94,18 @@ const RootMutation = new GraphQLObjectType({
         _id: { type: new GraphQLNonNull(GraphQLID) },
       },
       resolve: deleteById,
+    },
+    assignProfileToPastors: {
+      type: GraphQLBoolean,
+      args: {
+        profile: { type: new GraphQLNonNull(GraphQLID) },
+        pastors: {
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(GraphQLID))
+          ),
+        },
+      },
+      resolve: assignProfileToPastors,
     },
   },
 });
