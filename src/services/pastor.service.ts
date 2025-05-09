@@ -5,7 +5,7 @@ import { Options, Result } from '../repositories/repository';
 import FileApi from '../apis/file.api';
 import { Types } from 'mongoose';
 import { v4 as uuid } from 'uuid';
-import { Role, Scope } from '../models/user.model';
+import { Scope } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import { formatToCapitalized } from 'brazilian-values';
 import UserService from './user.service';
@@ -86,7 +86,6 @@ class PastorService extends BaseService<IPastor> {
       ...props,
       name: formatToCapitalized(props.name),
       password: hashedPassword,
-      role: Role.PASTOR,
       scopes: [
         Scope.CanListPastors,
         Scope.CanEditAccountPersonalInfo,

@@ -1,11 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import Base from './base.model';
 
-export enum Role {
-  ADMIN = 'ADMIN',
-  PASTOR = 'PASTOR',
-}
-
 export enum Scope {
   CanListPastors = 'CanListPastors',
   CanDeletePastor = 'CanDeletePastor',
@@ -16,6 +11,7 @@ export enum Scope {
   CanEditAccountContactInfo = 'CanEditAccountContactInfo',
   CanEditAccountMinistry = 'CanEditAccountMinistry',
   CanEditAccountOrderCard = 'CanEditAccountOrderCard',
+  CanListAccountAnalysisHistory = 'CanListAccountAnalysisHistory',
   CanApprovePastorDocumentationAnalysis = 'CanApprovePastorDocumentationAnalysis',
   CanApprovePastorFinancialAnalysis = 'CanApprovePastorFinancialAnalysis',
   CanAddPendingItemAnalysis = 'CanAddPendingItemAnalysis',
@@ -34,7 +30,6 @@ export interface IUser extends Base {
   name: string;
   email: string;
   password: string;
-  role: Role;
   createdAt: Date;
   scopes: Scope[];
   pictureUrl?: string;
@@ -43,7 +38,6 @@ const UserSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   password: { type: String, required: true },
-  role: { type: String, enum: Object.values(Role), required: true },
   createdAt: { type: Date, default: Date.now },
   scopes: {
     type: [String],

@@ -11,18 +11,6 @@ import {
   createUser,
   getLoggedUser,
 } from '../resolvers/user.resolver';
-import { GraphQLEnumType } from 'graphql/type';
-import { mapValues } from 'lodash';
-import { Role } from '../models/user.model';
-
-const RoleType = new GraphQLEnumType({
-  name: 'Role',
-  values: mapValues(Role, (value) => {
-    return {
-      value,
-    };
-  }),
-});
 
 const UserType = new GraphQLObjectType({
   name: 'User',
@@ -30,7 +18,6 @@ const UserType = new GraphQLObjectType({
     _id: { type: GraphQLID },
     name: { type: GraphQLString },
     email: { type: GraphQLString },
-    role: { type: RoleType },
     scopes: { type: new GraphQLList(GraphQLString) },
     pictureUrl: { type: GraphQLString },
   }),
@@ -55,9 +42,6 @@ const RootMutation = new GraphQLObjectType({
         name: { type: new GraphQLNonNull(GraphQLString) },
         email: { type: new GraphQLNonNull(GraphQLString) },
         password: { type: new GraphQLNonNull(GraphQLString) },
-        role: {
-          type: RoleType,
-        },
       },
       resolve: createUser,
     },
