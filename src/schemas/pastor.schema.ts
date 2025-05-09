@@ -18,6 +18,7 @@ import {
   list,
   updatePastor,
 } from '../resolvers/pastor.resolver';
+import { Scope } from '../models/user.model';
 
 const MaritalStatusType = new GraphQLEnumType({
   name: 'MaritalStatus',
@@ -26,6 +27,14 @@ const MaritalStatusType = new GraphQLEnumType({
       value,
     };
   }),
+});
+
+const ScopeEnumType = new GraphQLEnumType({
+  name: 'Scope',
+  values: Object.keys(Scope).reduce((obj, key) => {
+    obj[key] = { value: key };
+    return obj;
+  }, {} as { [k: string]: { value: string } }),
 });
 
 const PastorType = new GraphQLObjectType({
@@ -56,6 +65,7 @@ const PastorType = new GraphQLObjectType({
     cpfRgUrl: { type: GraphQLString },
     createdAt: { type: GraphQLDateTime },
     status: { type: GraphQLString },
+    scopes: { type: new GraphQLList(ScopeEnumType) },
   }),
 });
 
@@ -150,6 +160,7 @@ const RootMutation = new GraphQLObjectType({
         fileOrdinationMinutes: { type: GraphQLUpload },
         filePicture: { type: GraphQLUpload },
         fileCpfRg: { type: GraphQLUpload },
+        scopes: { type: new GraphQLList(new GraphQLNonNull(ScopeEnumType)) },
       },
       resolve: updatePastor,
     },

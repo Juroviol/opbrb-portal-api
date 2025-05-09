@@ -1,4 +1,4 @@
-import { IUser, UserModel } from './user.model';
+import { IUser, Scope, UserModel } from './user.model';
 import { Schema } from 'mongoose';
 
 export enum MaritalStatus {
@@ -30,6 +30,7 @@ export interface IPastor extends IUser {
   status: Status;
   church: string;
   ordinanceTime: number;
+  scopes: Scope[];
 }
 
 export const PastorModel = UserModel.discriminator<IPastor>(
@@ -60,6 +61,11 @@ export const PastorModel = UserModel.discriminator<IPastor>(
       enum: Status,
       required: true,
       default: Status.ANALYSING,
+    },
+    scopes: {
+      type: [String],
+      enum: Object.values(Scope),
+      required: true,
     },
   })
 );
