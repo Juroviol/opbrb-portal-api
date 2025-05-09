@@ -60,7 +60,7 @@ const PastorType = new GraphQLObjectType({
 });
 
 const PastorPageType = new GraphQLObjectType({
-  name: 'Page',
+  name: 'PastorPage',
   fields: {
     total: { type: GraphQLInt },
     docs: { type: new GraphQLList(PastorType) },
