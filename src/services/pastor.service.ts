@@ -89,7 +89,6 @@ class PastorService extends BaseService<IPastor> {
       role: Role.PASTOR,
       scopes: [
         Scope.CanListPastors,
-        Scope.CanDetailPastor,
         Scope.CanEditAccountPersonalInfo,
         Scope.CanEditAccountAddress,
         Scope.CanEditAccountContactInfo,
@@ -202,6 +201,32 @@ class PastorService extends BaseService<IPastor> {
       },
       options
     );
+  }
+
+  async remove(id: string | Types.ObjectId): Promise<Result<IPastor> | null> {
+    const pastor = await this.findById(id);
+    if (!pastor) {
+      throw new Error('Pastor not found.');
+    }
+    if (pastor.recommendationLetterUrl) {
+      await FileApi.delete([{ Key: pastor.recommendationLetterUrl }]);
+    }
+
+    if (pastor.paymentConfirmationUrl) {
+      await FileApi.delete([{ Key: pastor.paymentConfirmationUrl }]);
+    }
+
+    if (pastor.ordinationMinutesUrl) {
+      await FileApi.delete([{ Key: pastor.ordinationMinutesUrl }]);
+    }
+
+    if (pastor.pictureUrl) {
+      await FileApi.delete([{ Key: pastor.pictureUrl }]);
+    }
+    if (pastor.cpfRgUrl) {
+      await FileApi.delete([{ Key: pastor.cpfRgUrl }]);
+    }
+    return super.remove(id);
   }
 }
 

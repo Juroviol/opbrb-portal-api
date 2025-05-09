@@ -1,4 +1,5 @@
 import {
+  GraphQLBoolean,
   GraphQLEnumType,
   GraphQLID,
   GraphQLInt,
@@ -9,14 +10,17 @@ import {
   GraphQLString,
 } from 'graphql';
 import { GraphQLDate, GraphQLDateTime } from 'graphql-scalars';
-import { MaritalStatus } from '../models/pastor.model';
+import { AnalysisType, MaritalStatus } from '../models/pastor.model';
 import { mapValues } from 'lodash';
 import { GraphQLUpload } from 'graphql-upload-ts';
 import {
+  approveAnalysis,
   create,
+  createPastorPendingItemAnalysis,
+  deleteById,
   getById,
   list,
-  updatePastor,
+  update,
 } from '../resolvers/pastor.resolver';
 import { Scope } from '../models/user.model';
 
@@ -31,10 +35,33 @@ const MaritalStatusType = new GraphQLEnumType({
 
 const ScopeEnumType = new GraphQLEnumType({
   name: 'Scope',
-  values: Object.keys(Scope).reduce((obj, key) => {
-    obj[key] = { value: key };
-    return obj;
-  }, {} as { [k: string]: { value: string } }),
+  values: mapValues(Scope, (value) => {
+    return {
+      value,
+    };
+  }),
+});
+
+const AnalysisEnumType = new GraphQLEnumType({
+  name: 'AnalysisType',
+  values: mapValues(AnalysisType, (value) => {
+    return {
+      value,
+    };
+  }),
+});
+
+const AnalysisObjectType = new GraphQLObjectType({
+  name: 'Analysis',
+  fields: () => ({
+    author: { type: GraphQLString },
+    type: {
+      type: AnalysisEnumType,
+    },
+    date: { type: GraphQLDate },
+    reason: { type: GraphQLString },
+    approved: { type: GraphQLBoolean },
+  }),
 });
 
 const PastorType = new GraphQLObjectType({
@@ -66,6 +93,7 @@ const PastorType = new GraphQLObjectType({
     createdAt: { type: GraphQLDateTime },
     status: { type: GraphQLString },
     scopes: { type: new GraphQLList(ScopeEnumType) },
+    analysis: { type: new GraphQLList(AnalysisObjectType) },
   }),
 });
 
@@ -80,18 +108,18 @@ const PastorPageType = new GraphQLObjectType({
 const RootQuery = new GraphQLObjectType({
   name: 'Query',
   fields: {
-    getPastor: {
+    pastor: {
       type: PastorType,
       args: {
-        id: { type: GraphQLID },
+        _id: { type: new GraphQLNonNull(GraphQLID) },
       },
       resolve: getById,
     },
-    getPastors: {
+    pastors: {
       type: PastorPageType,
       args: {
-        page: { type: GraphQLInt },
-        size: { type: GraphQLInt },
+        page: { type: new GraphQLNonNull(GraphQLInt) },
+        size: { type: new GraphQLNonNull(GraphQLInt) },
       },
       resolve: list,
     },
@@ -162,7 +190,31 @@ const RootMutation = new GraphQLObjectType({
         fileCpfRg: { type: GraphQLUpload },
         scopes: { type: new GraphQLList(new GraphQLNonNull(ScopeEnumType)) },
       },
-      resolve: updatePastor,
+      resolve: update,
+    },
+    deletePastor: {
+      type: GraphQLBoolean,
+      args: {
+        _id: { type: new GraphQLNonNull(GraphQLID) },
+      },
+      resolve: deleteById,
+    },
+    approvePastorAnalysis: {
+      type: GraphQLBoolean,
+      args: {
+        _id: { type: new GraphQLNonNull(GraphQLID) },
+        type: { type: new GraphQLNonNull(AnalysisEnumType) },
+      },
+      resolve: approveAnalysis,
+    },
+    createPastorPendingItemAnalysis: {
+      type: GraphQLBoolean,
+      args: {
+        _id: { type: new GraphQLNonNull(GraphQLID) },
+        type: { type: new GraphQLNonNull(AnalysisEnumType) },
+        reason: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: createPastorPendingItemAnalysis,
     },
   },
 });

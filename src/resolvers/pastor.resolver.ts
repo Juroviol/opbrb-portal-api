@@ -1,8 +1,13 @@
 import { GraphQLFieldResolver } from 'graphql/type/definition';
-import { IPastor } from '../models/pastor.model';
+import { AnalysisType, IPastor, Status } from '../models/pastor.model';
 import PastorService from '../services/pastor.service';
 import { FieldNode } from 'graphql/language/ast';
 import { Page } from '../repositories/repository';
+import { PageArg, ResolverCtx } from '../types';
+import { requireAuth } from '../helpers';
+import UserService from '../services/user.service';
+import { findLast } from 'lodash';
+import { Types } from 'mongoose';
 
 function streamToBuffer(stream: NodeJS.ReadableStream) {
   const chunks: Buffer[] = [];
@@ -21,12 +26,12 @@ type FileType = Promise<{
 export const getById: GraphQLFieldResolver<
   IPastor,
   { user: { id: string } },
-  { id: string },
+  { _id: string },
   Promise<IPastor | null>
 > = async (_parent, args, _context, info) => {
   const [fieldNode] = info.fieldNodes;
   const selections = fieldNode.selectionSet?.selections as FieldNode[];
-  return PastorService.findById(args.id, {
+  return PastorService.findById(args._id, {
     select: selections?.map((s) => s.name.value as keyof IPastor),
   });
 };
@@ -44,7 +49,7 @@ type CreatePastorArgs = Omit<
 
 export const create: GraphQLFieldResolver<
   unknown,
-  { user: { id: string } },
+  ResolverCtx,
   CreatePastorArgs,
   Promise<IPastor>
 > = async (
@@ -142,9 +147,9 @@ type UpdatePastorArgs = Partial<IPastor> &
     fileCpfRg?: FileType;
   };
 
-export const updatePastor: GraphQLFieldResolver<
+export const update: GraphQLFieldResolver<
   unknown,
-  { user: { id: string } },
+  ResolverCtx,
   UpdatePastorArgs,
   Promise<IPastor>
 > = async (
@@ -257,20 +262,97 @@ export const updatePastor: GraphQLFieldResolver<
 
 export const list: GraphQLFieldResolver<
   unknown,
-  { user: { id: string } },
-  { page: number; size: number },
+  ResolverCtx,
+  PageArg,
   Promise<Page<IPastor>>
-> = (_, args, ctx, info) => {
-  if (!ctx.user) {
-    throw new Error('No user logged in.');
-  }
+> = requireAuth((_, args, ctx, info) => {
   const [fieldNode] = info.fieldNodes;
   const [, docsSelect] = fieldNode.selectionSet?.selections as FieldNode[];
   return PastorService.paginate({
     page: args.page,
     size: args.size,
+    filters: {
+      _id: {
+        $ne: new Types.ObjectId(ctx.user.id),
+      },
+    },
     select: (docsSelect.selectionSet?.selections as FieldNode[]).map(
       (s) => s.name.value as keyof IPastor
     ),
   });
-};
+});
+
+export const approveAnalysis: GraphQLFieldResolver<
+  unknown,
+  ResolverCtx,
+  Required<Pick<IPastor, '_id'>> & { type: AnalysisType },
+  Promise<Boolean>
+> = requireAuth(async (_, args, ctx, info) => {
+  const pastor = await PastorService.findById(args._id);
+  if (!pastor) {
+    throw new Error('No pastor found');
+  }
+  const author = (await UserService.findById(ctx.user.id))!;
+  const newAnalysis = [
+    ...(pastor.analysis || []),
+    {
+      approved: true,
+      author: author.name,
+      type: args.type,
+      date: new Date(),
+    },
+  ];
+  const lastDocumentationAnalysis = findLast(
+    newAnalysis,
+    (a) => a.type === AnalysisType.Documentation
+  );
+  const lastFinancialAnalysis = findLast(
+    newAnalysis,
+    (a) => a.type === AnalysisType.Financial
+  );
+  await PastorService.update(args._id, {
+    analysis: newAnalysis,
+    status:
+      lastDocumentationAnalysis?.approved && lastFinancialAnalysis?.approved
+        ? Status.APPROVED
+        : Status.ANALYSING,
+  });
+  return true;
+});
+
+export const createPastorPendingItemAnalysis: GraphQLFieldResolver<
+  unknown,
+  ResolverCtx,
+  Required<Pick<IPastor, '_id'>> & { type: AnalysisType; reason: string },
+  Promise<Boolean>
+> = requireAuth(async (_, args, ctx, info) => {
+  const pastor = await PastorService.findById(args._id);
+  if (!pastor) {
+    throw new Error('No pastor found');
+  }
+  const author = (await UserService.findById(ctx.user.id))!;
+  await PastorService.update(args._id, {
+    status: Status.ANALYSING,
+    analysis: [
+      ...(pastor.analysis || []),
+      {
+        approved: false,
+        author: author.name,
+        type: args.type,
+        date: new Date(),
+        reason: args.reason,
+      },
+    ],
+  });
+  return true;
+});
+
+export const deleteById: GraphQLFieldResolver<
+  IPastor,
+  ResolverCtx,
+  { _id: string },
+  Promise<boolean>
+> = requireAuth(async (_parent, args, _context) => {
+  await PastorService.remove(args._id);
+  return true;
+});

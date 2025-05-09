@@ -12,6 +12,19 @@ export enum Status {
   ANALYSING = 'Em análise',
 }
 
+export enum AnalysisType {
+  Documentation = 'Documentação',
+  Financial = 'Financeiro',
+}
+
+export type Analysis = {
+  author: string;
+  date: Date;
+  type: AnalysisType;
+  approved: boolean;
+  reason?: string;
+};
+
 export interface IPastor extends IUser {
   cpf: string;
   maritalStatus: MaritalStatus;
@@ -28,6 +41,7 @@ export interface IPastor extends IUser {
   ordinationMinutesUrl?: string;
   cpfRgUrl?: string;
   status: Status;
+  analysis?: Analysis[];
   church: string;
   ordinanceTime: number;
   scopes: Scope[];
@@ -56,6 +70,19 @@ export const PastorModel = UserModel.discriminator<IPastor>(
     cpfRgUrl: { type: String },
     church: { type: String, required: true },
     ordinanceTime: { type: Number, required: true },
+    analysis: [
+      {
+        reason: { type: String },
+        approved: { type: Boolean, required: true },
+        date: { type: Date, required: true },
+        type: {
+          type: String,
+          enum: AnalysisType,
+          required: true,
+        },
+        author: { type: String, required: true },
+      },
+    ],
     status: {
       type: String,
       enum: Status,
